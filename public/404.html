@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GSAP API Coach</title>
+    <script>
+      (function () {
+        var repoBase = "/GSAP-Coach/";
+        var path = window.location.pathname;
+        var relativePath = path.indexOf(repoBase) === 0
+          ? path.slice(repoBase.length)
+          : path.replace(/^\//, "");
+        var query = window.location.search
+          ? "&" + window.location.search.slice(1).replace(/&/g, "~and~")
+          : "";
+
+        window.location.replace(repoBase + "?/" + relativePath + query + window.location.hash);
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>
