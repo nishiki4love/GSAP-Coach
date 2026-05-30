@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { useI18n } from "@/lib/i18n";
 
 interface DemoStagePanelProps {
   observerHint: string;
@@ -8,6 +9,8 @@ interface DemoStagePanelProps {
 
 /** GSAP 演示舞台：只保留会被动画命中的 DOM，避免和控制面板状态混在一起。 */
 export function DemoStagePanel({ observerHint, stageStatus }: DemoStagePanelProps) {
+  const { t } = useI18n();
+
   return (
     <Card>
       <CardContent>
@@ -18,7 +21,7 @@ export function DemoStagePanel({ observerHint, stageStatus }: DemoStagePanelProp
           <div className="stage-canvas relative min-h-[360px] overflow-hidden rounded-lg border bg-[hsl(var(--stage-hue),42%,97%)] p-4">
             <div className="mb-2 flex items-center justify-between gap-3">
               <div>
-                <p className="split-demo-title text-lg font-semibold">GSAP API Coach</p>
+                <p className="split-demo-title text-lg font-semibold">{t("workbench.brand")}</p>
                 <p className="scramble-status text-xs text-muted-foreground">{stageStatus}</p>
               </div>
               <Badge variant="secondary" className="font-mono">{observerHint}</Badge>

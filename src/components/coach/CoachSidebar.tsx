@@ -10,12 +10,14 @@ import {
   SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { apiItems, getApisByGroup, skillGroups, type SkillGroupId } from "@/data/gsapApiCatalog";
+import { localizePage, localizeSkillGroup, useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { Activity, Atom, Braces, Gauge, Layers, Puzzle, Route, Zap, type LucideIcon } from "lucide-react";
+import { NavLink } from "react-router";
+import { CoachLogo } from "./CoachLogo";
 import { coachPages } from "./navigation";
 import type { CoachPageId, CoverageTotals } from "./types";
 
@@ -23,7 +25,6 @@ interface CoachSidebarProps {
   activePage: CoachPageId;
   coverageTotals: CoverageTotals;
   selectedGroup: SkillGroupId;
-  onPageChange: (page: CoachPageId) => void;
   onSkillGroupSelect: (group: SkillGroupId) => void;
 }
 
@@ -43,21 +44,26 @@ export function CoachSidebar({
   activePage,
   coverageTotals,
   selectedGroup,
-  onPageChange,
   onSkillGroupSelect,
 }: CoachSidebarProps) {
+  const { locale, t } = useI18n();
+  const localizedPages = coachPages.map((page) => localizePage(page, locale));
+  const localizedGroups = skillGroups.map((group) => localizeSkillGroup(group, locale));
+
   return (
     <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" tooltip="GSAP API Coach" onClick={() => onPageChange("demo")}>
-              <span className="flex size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
-                <Zap />
-              </span>
+            <SidebarMenuButton
+              size="lg"
+              tooltip="GSAP API Coach"
+              render={<NavLink to="/" />}
+            >
+              <CoachLogo className="!size-10 shrink-0 rounded-md bg-sidebar-primary text-sidebar-primary-foreground" />
               <span className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                 <span className="truncate font-semibold">GSAP API Coach</span>
-                <span className="truncate text-xs text-muted-foreground">{apiItems.length} 个 API / 配置项</span>
+                <span className="truncate text-xs text-muted-foreground">{t("app.sidebar.apiCount", { count: apiItems.length })}</span>
               </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -66,15 +72,15 @@ export function CoachSidebar({
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>页面结构</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("app.sidebar.pages")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {coachPages.map((page) => (
+              {localizedPages.map((page) => (
                 <SidebarMenuItem key={page.id}>
                   <SidebarMenuButton
                     isActive={activePage === page.id}
                     tooltip={page.title}
-                    onClick={() => onPageChange(page.id)}
+                    render={<NavLink to={page.path} />}
                   >
                     <page.icon />
                     <span>{page.title}</span>
@@ -86,10 +92,10 @@ export function CoachSidebar({
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>GSAP Skills</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("app.sidebar.skills")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {skillGroups.map((group) => {
+              {localizedGroups.map((group) => {
                 const Icon = skillGroupIcons[group.id];
 
                 return (
@@ -117,27 +123,29 @@ export function CoachSidebar({
         <div className="grid grid-cols-3 gap-2 px-2 py-1 text-center text-xs group-data-[collapsible=icon]:hidden">
           <div>
             <div className="font-medium">{coverageTotals.live}</div>
-            <div className="text-muted-foreground">互动</div>
+            <div className="text-muted-foreground">{t("coverage.live")}</div>
           </div>
           <div>
             <div className="font-medium">{coverageTotals.docs}</div>
-            <div className="text-muted-foreground">教程</div>
+            <div className="text-muted-foreground">{t("coverage.docs")}</div>
           </div>
           <div>
             <div className="font-medium">{coverageTotals.dev}</div>
-            <div className="text-muted-foreground">开发</div>
+            <div className="text-muted-foreground">{t("coverage.dev")}</div>
           </div>
         </div>
         <SidebarMenu className="hidden group-data-[collapsible=icon]:flex">
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip={`${apiItems.length} 个 API / 配置项`} onClick={() => onPageChange("coverage")}>
+            <SidebarMenuButton
+              tooltip={t("app.sidebar.apiCount", { count: apiItems.length })}
+              render={<NavLink to="/coverage" />}
+            >
               <Gauge />
-              <span>覆盖矩阵</span>
+              <span>{t("app.header.coverage")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   );
 }

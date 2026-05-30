@@ -1,7 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { findApiItem, skillGroups, tutorialChapters, type ApiItem } from "@/data/gsapApiCatalog";
+import { findApiItem, skillGroups, type ApiItem } from "@/data/gsapApiCatalog";
+import { getLocalizedTutorialChapters, localizeApi, localizeSkillGroup, useI18n } from "@/lib/i18n";
 
 interface TutorialsPageProps {
   onApiSelect: (api: ApiItem) => void;
@@ -9,17 +10,20 @@ interface TutorialsPageProps {
 
 /** 教程页：把学习路径从工作台中拆出来，按章节阅读。 */
 export function TutorialsPage({ onApiSelect }: TutorialsPageProps) {
+  const { locale, t } = useI18n();
+  const localizedChapters = getLocalizedTutorialChapters(locale);
+
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">详细使用教程</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("tutorials.title")}</h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-          按 Core、Timeline、ScrollTrigger、Plugins、Utils、框架集成和性能优化逐步阅读，避免在同一个长页面里迷路。
+          {t("tutorials.description")}
         </p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        {tutorialChapters.map((chapter) => (
+        {localizedChapters.map((chapter) => (
           <Card key={chapter.id}>
             <CardHeader>
               <div className="flex items-start justify-between gap-3">
@@ -27,7 +31,7 @@ export function TutorialsPage({ onApiSelect }: TutorialsPageProps) {
                   <CardTitle>{chapter.title}</CardTitle>
                   <CardDescription className="mt-2 leading-6">{chapter.intro}</CardDescription>
                 </div>
-                <Badge variant="secondary">{skillGroups.find((group) => group.id === chapter.group)?.source}</Badge>
+                <Badge variant="secondary">{localizeSkillGroup(skillGroups.find((group) => group.id === chapter.group) ?? skillGroups[0], locale).source}</Badge>
               </div>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
@@ -41,10 +45,11 @@ export function TutorialsPage({ onApiSelect }: TutorialsPageProps) {
               </ol>
               <div className="flex flex-wrap gap-2">
                 {chapter.apiIds.slice(0, 8).map((apiId) => {
-                  const api = findApiItem(apiId);
-                  if (!api) return null;
+                  const rawApi = findApiItem(apiId);
+                  if (!rawApi) return null;
+                  const api = localizeApi(rawApi, locale);
                   return (
-                    <Button key={api.id} variant="outline" size="sm" onClick={() => onApiSelect(api)}>
+                    <Button key={api.id} variant="outline" size="sm" onClick={() => onApiSelect(rawApi)}>
                       {api.name}
                     </Button>
                   );
