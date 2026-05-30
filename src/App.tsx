@@ -1,11 +1,14 @@
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { apiItems, findApiItem, getApisByGroup, tutorialChapters, type ApiItem, type CoverageMode, type DemoTab, type SkillGroupId } from "@/data/gsapApiCatalog";
+import { localizeApi, localizeTutorialChapter, useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { lazy, Suspense, useCallback, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router";
 import { CoachHeader } from "./components/coach/CoachHeader";
 import { CoachSidebar } from "./components/coach/CoachSidebar";
+import { getPageIdFromPath, pagePathById } from "./components/coach/navigation";
 import type { AnimationAction, CoachPageId, CoverageTotals, DemoControls, UtilitySnapshot } from "./components/coach/types";
 import { WorkbenchPage } from "./components/coach/WorkbenchPage";
 import {
@@ -35,10 +38,20 @@ const coverageModeToKey: Record<CoverageMode, keyof CoverageTotals> = {
 
 /** 懒加载页面时使用的轻量占位，避免把所有页面组件打进首屏入口。 */
 function LazyPageFallback() {
+  const { t } = useI18n();
+
   return (
     <div className="rounded-lg border bg-card p-6 text-sm text-muted-foreground">
-      页面模块加载中...
+      {t("app.loading")}
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <CoachAppShell />
+    </BrowserRouter>
   );
 }
 
@@ -75,25 +88,31 @@ function createUtilitySnapshot(raw = Math.round(gsap.utils.random(-40, 140, 5)))
   };
 }
 
-export default function App() {
+function CoachAppShell() {
+  const { locale, t } = useI18n();
+  const location = useLocation();
+  const navigate = useNavigate();
   const rootRef = useRef<HTMLDivElement | null>(null);
   const activeAnimationRef = useRef<gsap.core.Animation | null>(null);
   const splitRef = useRef<ReturnType<typeof SplitText.create> | null>(null);
 
-  const [activePage, setActivePage] = useState<CoachPageId>("demo");
+  const activePage = useMemo<CoachPageId>(() => getPageIdFromPath(location.pathname), [location.pathname]);
   const [selectedGroup, setSelectedGroup] = useState<SkillGroupId>("core");
   const [selectedApiId, setSelectedApiId] = useState("gsap-to");
   const [activeDemo, setActiveDemo] = useState<DemoTab["id"]>("core");
-  const [stageStatus, setStageStatus] = useState("舞台已就绪");
+  const [stageStatus, setStageStatus] = useState(() => t("app.stage.ready"));
   const [progress, setProgress] = useState(0);
   const [pluginLayout, setPluginLayout] = useState<"grid" | "list">("grid");
-  const [observerHint, setObserverHint] = useState("在舞台上滚动或拖动");
+  const [observerHint, setObserverHint] = useState(() => t("app.observer.hint"));
   const [utilsSnapshot, setUtilsSnapshot] = useState(() => createUtilitySnapshot(65));
 
-  const selectedApi = useMemo(() => findApiItem(selectedApiId) ?? getApisByGroup(selectedGroup)[0], [selectedApiId, selectedGroup]);
+  const selectedApi = useMemo(() => {
+    const api = findApiItem(selectedApiId) ?? getApisByGroup(selectedGroup)[0];
+    return api ? localizeApi(api, locale) : undefined;
+  }, [locale, selectedApiId, selectedGroup]);
   const selectedChapter = useMemo(
-    () => tutorialChapters.find((chapter) => chapter.group === selectedGroup) ?? tutorialChapters[0],
-    [selectedGroup],
+    () => localizeTutorialChapter(tutorialChapters.find((chapter) => chapter.group === selectedGroup) ?? tutorialChapters[0], locale),
+    [locale, selectedGroup],
   );
   const coverageTotals = useMemo<CoverageTotals>(
     () => apiItems.reduce(
@@ -107,6 +126,11 @@ export default function App() {
   );
 
   const { contextSafe } = useGSAP({ scope: rootRef });
+
+  useEffect(() => {
+    setStageStatus(t("app.stage.ready"));
+    setObserverHint(t("app.observer.hint"));
+  }, [locale, t]);
 
   useGSAP(
     () => {
@@ -154,18 +178,18 @@ export default function App() {
         bounds: stage,
         inertia: true,
         edgeResistance: 0.75,
-        onDragStart: () => setStageStatus("Draggable.create(): 正在拖拽"),
-        onDragEnd: () => setStageStatus("InertiaPlugin: 释放后保留动量"),
+        onDragStart: () => setStageStatus(t("app.stage.dragging")),
+        onDragEnd: () => setStageStatus(t("app.stage.inertia")),
       });
 
       Observer.create({
         target: stage,
         type: "wheel,touch,pointer",
         tolerance: 10,
-        onUp: () => setObserverHint("Observer: onUp"),
-        onDown: () => setObserverHint("Observer: onDown"),
-        onLeft: () => setObserverHint("Observer: onLeft"),
-        onRight: () => setObserverHint("Observer: onRight"),
+        onUp: () => setObserverHint(t("app.observer.up")),
+        onDown: () => setObserverHint(t("app.observer.down")),
+        onLeft: () => setObserverHint(t("app.observer.left")),
+        onRight: () => setObserverHint(t("app.observer.right")),
       });
 
       return () => {
@@ -175,7 +199,7 @@ export default function App() {
         mm.revert();
       };
     },
-    { scope: rootRef, dependencies: [activePage], revertOnUpdate: true },
+    { scope: rootRef, dependencies: [activePage, t], revertOnUpdate: true },
   );
 
   useGSAP(
@@ -199,15 +223,15 @@ export default function App() {
     const firstApi = getApisByGroup(group)[0];
     setSelectedGroup(group);
     setSelectedApiId(firstApi.id);
-    setActivePage("demo");
-  }, []);
+    navigate(pagePathById.demo);
+  }, [navigate]);
 
   /** 选择任意 API 行后，切到演示工作台的详情面板。 */
   const selectApi = useCallback((api: ApiItem) => {
     setSelectedGroup(api.group);
     setSelectedApiId(api.id);
-    setActivePage("demo");
-  }, []);
+    navigate(pagePathById.demo);
+  }, [navigate]);
 
   /** 重置舞台上的临时动画状态，避免多次演示互相污染。 */
   const resetStage = contextSafe(() => {
@@ -233,13 +257,13 @@ export default function App() {
     gsap.set(q("#morph-live"), { morphSVG: "#morph-start" });
     gsap.set(q(".motion-dot"), { x: 0, y: 0, rotation: 0 });
     setProgress(0);
-    setStageStatus("舞台已重置");
+    setStageStatus(t("app.stage.reset"));
   });
 
   /** 根据当前 tab 运行对应的 GSAP 演示，并保存返回 Animation 供播放控件控制。 */
   const runDemo = contextSafe((demoId: DemoTab["id"] = activeDemo) => {
     if (demoId !== "scroll" && activePage !== "demo") {
-      flushSync(() => setActivePage("demo"));
+      flushSync(() => navigate(pagePathById.demo));
     }
 
     const q = gsap.utils.selector(rootRef);
@@ -248,9 +272,9 @@ export default function App() {
     if (demoId === "core") {
       const tl = gsap.timeline({
         defaults: { duration: 0.55, ease: "power2.out" },
-        onStart: () => setStageStatus("Core: to/from/fromTo/set + stagger"),
+        onStart: () => setStageStatus(t("app.stage.coreStart")),
         onUpdate: () => setProgress(tl.progress()),
-        onComplete: () => setStageStatus("Core: clearProps 已清理背景色"),
+        onComplete: () => setStageStatus(t("app.stage.coreComplete")),
       });
 
       tl.set(q(".core-box"), { transformOrigin: "center center" })
@@ -312,16 +336,16 @@ export default function App() {
         .to(q(".core-box"), { x: 44, y: 38, rotation: 0, scale: 1, ease: "coach-snap" }, "outro");
 
       const tween = master.tweenFromTo("intro", "outro", {
-        onStart: () => setStageStatus("Timeline: tweenFromTo('intro', 'outro')"),
+        onStart: () => setStageStatus(t("app.stage.timelineStart")),
         onUpdate: () => setProgress(master.progress()),
-        onComplete: () => setStageStatus("Timeline: 标签片段播放完成"),
+        onComplete: () => setStageStatus(t("app.stage.timelineComplete")),
       });
       activeAnimationRef.current = tween;
       return;
     }
 
     if (demoId === "scroll") {
-      flushSync(() => setActivePage("scroll-labs"));
+      flushSync(() => navigate(pagePathById["scroll-labs"]));
       let attempts = 0;
       /** 等懒加载滚动页真正挂载后再执行 ScrollTo，避免目标 selector 还不存在。 */
       const scrollWhenReady = () => {
@@ -330,7 +354,7 @@ export default function App() {
             duration: 0.9,
             scrollTo: { y: ".vertical-scroll-lab", offsetY: 0 },
             ease: "power2.inOut",
-            onStart: () => setStageStatus("ScrollToPlugin: 跳转到垂直滚动实验"),
+            onStart: () => setStageStatus(t("app.stage.scrollJump")),
           });
           return;
         }
@@ -355,9 +379,9 @@ export default function App() {
 
       const tl = gsap.timeline({
         defaults: { duration: 0.65, ease: "power2.out" },
-        onStart: () => setStageStatus("Plugins: SplitText / DrawSVG / MorphSVG / MotionPath / Physics"),
+        onStart: () => setStageStatus(t("app.stage.pluginsStart")),
         onUpdate: () => setProgress(tl.progress()),
-        onComplete: () => setStageStatus("Plugins: SVG 与物理演示完成，拖拽仍可继续"),
+        onComplete: () => setStageStatus(t("app.stage.pluginsComplete")),
       });
 
       tl.from(splitRef.current?.chars ?? [], { y: 26, autoAlpha: 0, stagger: 0.018, ease: "back.out(1.7)" })
@@ -385,7 +409,7 @@ export default function App() {
 
       gsap.to(q(".scramble-status"), {
         duration: 0.85,
-        scrambleText: { text: "ScrambleTextPlugin: 插件已激活", chars: "GSAP01", revealDelay: 0.15 },
+        scrambleText: { text: t("app.stage.scramble"), chars: "GSAP01", revealDelay: 0.15 },
       });
 
       activeAnimationRef.current = tl;
@@ -398,7 +422,11 @@ export default function App() {
     const distributeY = gsap.utils.distribute({ base: -8, amount: 16, from: "center", grid: "auto", ease: "power1.inOut" });
     const tl = gsap.timeline({
       defaults: { duration: 0.42, ease: "power2.out" },
-      onStart: () => setStageStatus(`Utils: ${snapshot.raw} → ${snapshot.snapped}° / ${snapshot.unitized}`),
+      onStart: () => setStageStatus(t("app.stage.utilsStatus", {
+        raw: snapshot.raw,
+        snapped: snapshot.snapped,
+        unitized: snapshot.unitized,
+      })),
       onUpdate: () => setProgress(tl.progress()),
     });
 
@@ -416,7 +444,7 @@ export default function App() {
   const controlAnimation = contextSafe((action: AnimationAction) => {
     const animation = activeAnimationRef.current;
     if (!animation) {
-      setStageStatus("当前演示没有可控 Animation 实例");
+      setStageStatus(t("app.stage.noAnimation"));
       return;
     }
 
@@ -445,7 +473,7 @@ export default function App() {
       duration: 0.55,
       ease: "power2.inOut",
       stagger: 0.035,
-      onComplete: () => setStageStatus("Flip.from(): 布局切换完成"),
+      onComplete: () => setStageStatus(t("app.stage.flipComplete")),
     });
   });
 
@@ -472,29 +500,36 @@ export default function App() {
             activePage={activePage}
             coverageTotals={coverageTotals}
             selectedGroup={selectedGroup}
-            onPageChange={setActivePage}
             onSkillGroupSelect={selectSkillGroup}
           />
-          <SidebarInset>
-            <CoachHeader activePage={activePage} coverageTotals={coverageTotals} onPageChange={setActivePage} />
+          <SidebarInset className="min-w-0">
+            <CoachHeader activePage={activePage} coverageTotals={coverageTotals} />
             <main className={cn("flex flex-1 flex-col gap-4 p-4 md:p-6", activePage === "scroll-labs" && "pb-12")}>
-              {activePage === "demo" ? (
-                <WorkbenchPage
-                  selectedApi={selectedApi}
-                  selectedChapter={selectedChapter}
-                  demoControls={demoControls}
-                  utilsSnapshot={utilsSnapshot}
-                  onApiSelect={selectApi}
-                />
-              ) : null}
               <Suspense fallback={<LazyPageFallback />}>
-                {activePage === "tutorials" ? <TutorialsPage onApiSelect={selectApi} /> : null}
-                {activePage === "coverage" ? <CoveragePage onApiSelect={selectApi} /> : null}
-                {activePage === "scroll-labs" ? <ScrollLabsPage onStageStatusChange={setStageStatus} /> : null}
-                {activePage === "plugins" ? (
-                  <PluginsPage pluginLayout={pluginLayout} onToggleLayout={togglePluginLayout} onApiSelect={selectApi} />
-                ) : null}
-                {activePage === "performance" ? <PerformancePage /> : null}
+                <Routes>
+                  <Route
+                    path="/"
+                    element={(
+                      <WorkbenchPage
+                        selectedApi={selectedApi}
+                        selectedChapter={selectedChapter}
+                        demoControls={demoControls}
+                        utilsSnapshot={utilsSnapshot}
+                        onApiSelect={selectApi}
+                      />
+                    )}
+                  />
+                  <Route path="/tutorials" element={<TutorialsPage onApiSelect={selectApi} />} />
+                  <Route path="/coverage" element={<CoveragePage onApiSelect={selectApi} />} />
+                  <Route path="/scroll-labs" element={<Navigate to="/scroll-labs/vertical" replace />} />
+                  <Route path="/scroll-labs/:exampleId" element={<ScrollLabsPage onStageStatusChange={setStageStatus} />} />
+                  <Route
+                    path="/plugins"
+                    element={<PluginsPage pluginLayout={pluginLayout} onToggleLayout={togglePluginLayout} onApiSelect={selectApi} />}
+                  />
+                  <Route path="/performance" element={<PerformancePage />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
               </Suspense>
             </main>
           </SidebarInset>

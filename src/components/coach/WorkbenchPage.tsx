@@ -2,13 +2,13 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { demoTabs, type ApiItem, type DemoTab, type TutorialChapter } from "@/data/gsapApiCatalog";
+import { getLocalizedDemoTabs, useI18n } from "@/lib/i18n";
 import { Gauge, Layers, Route, SquareMousePointer, Zap } from "lucide-react";
 import { ApiDetailCard } from "./ApiDetailCard";
 import type { DemoControls, UtilitySnapshot } from "./types";
 import { DemoControlPanel } from "./workbench/DemoControlPanel";
 import { DemoStagePanel } from "./workbench/DemoStagePanel";
-import { PluginSummaryCard } from "./workbench/PluginSummaryCard";
-import { UtilitySnapshotCard } from "./workbench/UtilitySnapshotCard";
+import { LearningSupportPanel } from "./workbench/LearningSupportPanel";
 
 interface WorkbenchPageProps {
   selectedApi?: ApiItem;
@@ -34,6 +34,7 @@ export function WorkbenchPage({
   utilsSnapshot,
   onApiSelect,
 }: WorkbenchPageProps) {
+  const { locale, t } = useI18n();
   const {
     activeDemo,
     observerHint,
@@ -41,7 +42,8 @@ export function WorkbenchPage({
     setActiveDemo,
     runDemo,
   } = demoControls;
-  const selectedDemo = demoTabs.find((demo) => demo.id === activeDemo) ?? demoTabs[0];
+  const localizedDemoTabs = getLocalizedDemoTabs(locale);
+  const selectedDemo = localizedDemoTabs.find((demo) => demo.id === activeDemo) ?? localizedDemoTabs[0];
 
   return (
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_390px]">
@@ -51,10 +53,10 @@ export function WorkbenchPage({
             <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-start 2xl:justify-between">
               <div>
                 <CardTitle>
-                  <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">GSAP 功能演示工作台</h1>
+                  <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">{t("workbench.title")}</h1>
                 </CardTitle>
                 <CardDescription className="mt-2 max-w-2xl leading-6">
-                  运行 API 留在舞台中互动演示；调试工具与外部运行时 API 放入教程和覆盖矩阵。
+                  {t("workbench.description")}
                 </CardDescription>
               </div>
               <Tabs
@@ -65,8 +67,8 @@ export function WorkbenchPage({
                   runDemo(nextDemo);
                 }}
               >
-                <TabsList className="grid h-auto grid-cols-2 md:flex">
-                  {demoTabs.map((demo) => {
+                <TabsList className="grid !h-auto w-full grid-cols-2 gap-1 md:w-fit md:flex">
+                  {localizedDemoTabs.map((demo) => {
                     const Icon = demoIcons[demo.id];
                     return (
                       <TabsTrigger key={demo.id} value={demo.id}>
@@ -84,14 +86,12 @@ export function WorkbenchPage({
             <DemoControlPanel controls={demoControls} selectedDemo={selectedDemo} onApiSelect={onApiSelect} />
           </CardContent>
         </Card>
-
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <PluginSummaryCard />
-          <UtilitySnapshotCard snapshot={utilsSnapshot} />
-        </div>
       </div>
 
-      <ApiDetailCard api={selectedApi} chapter={selectedChapter} />
+      <div className="flex min-w-0 flex-col gap-4">
+        <ApiDetailCard api={selectedApi} chapter={selectedChapter} />
+        <LearningSupportPanel snapshot={utilsSnapshot} selectedChapter={selectedChapter} />
+      </div>
     </div>
   );
 }

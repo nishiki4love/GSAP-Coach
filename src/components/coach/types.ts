@@ -2,6 +2,8 @@ import type { DemoTab, SkillGroupId } from "@/data/gsapApiCatalog";
 
 export type CoachPageId = "demo" | "tutorials" | "coverage" | "scroll-labs" | "plugins" | "performance";
 
+export type ScrollExampleId = "vertical" | "horizontal" | "cleanup";
+
 export type AnimationAction = "play" | "pause" | "reverse" | "restart";
 
 export interface CoverageTotals {
