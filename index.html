@@ -7,8 +7,29 @@
       name="description"
       content="GSAP API Coach：覆盖本地 gsap-skills 的互动演示与中文教程。"
     />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
     <title>GSAP API Coach</title>
+    <script>
+      (function () {
+        var redirectPath = window.location.search;
+
+        if (redirectPath[1] !== "/") return;
+
+        var decodedPath = redirectPath
+          .slice(1)
+          .split("&")
+          .map(function (part) {
+            return part.replace(/~and~/g, "&");
+          })
+          .join("?");
+
+        window.history.replaceState(
+          null,
+          "",
+          window.location.pathname.slice(0, -1) + decodedPath + window.location.hash,
+        );
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
