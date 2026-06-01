@@ -69,7 +69,7 @@ export function CoachHeader({ activePage, coverageTotals }: CoachHeaderProps) {
 
       <Button
         variant="outline"
-        size="sm"
+        size="default"
         className="md:hidden"
         render={<NavLink to="/tutorials" />}
         nativeButton={false}
