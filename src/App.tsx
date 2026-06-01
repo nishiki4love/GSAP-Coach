@@ -153,7 +153,6 @@ function CoachAppShell() {
   const [activeDemo, setActiveDemo] = useState<DemoTab["id"]>("core");
   const [stageStatus, setStageStatus] = useState(() => t("app.stage.ready"));
   const [progress, setProgress] = useState(0);
-  const [pluginLayout, setPluginLayout] = useState<"grid" | "list">("grid");
   const [observerHint, setObserverHint] = useState(() => t("app.observer.hint"));
   const [utilsSnapshot, setUtilsSnapshot] = useState(() => createUtilitySnapshot(65));
   const [demoParameterValuesByApiId, setDemoParameterValuesByApiId] = useState<Record<string, DemoParameterValues>>({});
@@ -899,21 +898,6 @@ function CoachAppShell() {
     setStageStatus(`progress(${value.toFixed(2)})`);
   });
 
-  /** 使用 Flip 在插件卡片的网格与列表状态之间平滑切换。 */
-  const togglePluginLayout = contextSafe(() => {
-    const q = gsap.utils.selector(rootRef);
-    const tiles = q(".plugin-tile");
-    const state = Flip.getState(tiles);
-    flushSync(() => setPluginLayout((current) => (current === "grid" ? "list" : "grid")));
-    Flip.from(state, {
-      absolute: true,
-      duration: 0.55,
-      ease: "power2.inOut",
-      stagger: 0.035,
-      onComplete: () => setStageStatus(t("app.stage.flipComplete")),
-    });
-  });
-
   const demoControls = useMemo<DemoControls>(
     () => ({
       activeDemo,
@@ -985,7 +969,7 @@ function CoachAppShell() {
                   <Route path="/scroll-labs/:exampleId" element={<ScrollLabsPage onStageStatusChange={setStageStatus} />} />
                   <Route
                     path="/plugins"
-                    element={<PluginsPage pluginLayout={pluginLayout} onToggleLayout={togglePluginLayout} onApiSelect={selectApi} />}
+                    element={<PluginsPage onApiSelect={selectApi} />}
                   />
                   <Route path="/performance" element={<PerformancePage />} />
                   <Route path="*" element={<Navigate to="/" replace />} />

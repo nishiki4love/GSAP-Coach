@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getApisByGroup, type ApiItem } from "@/data/gsapApiCatalog";
 import { localizeApi, localizeCoverageMode, useI18n } from "@/lib/i18n";
-import { ArrowLeft, Shuffle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { NavLink } from "react-router";
 
 const modeVariant: Record<ApiItem["mode"], "default" | "secondary" | "outline"> = {
@@ -19,29 +19,23 @@ const learningStageKeyByMode: Record<ApiItem["mode"], "plugins.stage.recommended
 };
 
 interface PluginsPageProps {
-  pluginLayout: "grid" | "list";
-  onToggleLayout: () => void;
   onApiSelect: (api: ApiItem) => void;
 }
 
-/** 插件实验室页：把插件说明和 Flip 布局演示从主工作台中拆出来。 */
-export function PluginsPage({ pluginLayout, onToggleLayout, onApiSelect }: PluginsPageProps) {
+/** 插件实验室页：集中展示插件说明和详情入口。 */
+export function PluginsPage({ onApiSelect }: PluginsPageProps) {
   const { locale, t } = useI18n();
   const pluginApis = getApisByGroup("plugins");
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+      <div>
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{t("plugins.title")}</h1>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
             {t("plugins.description")}
           </p>
         </div>
-        <Button variant="outline" onClick={onToggleLayout}>
-          <Shuffle data-icon="inline-start" />
-          {t("plugins.flipToggle")}
-        </Button>
       </div>
 
       <Card>
@@ -57,7 +51,7 @@ export function PluginsPage({ pluginLayout, onToggleLayout, onApiSelect }: Plugi
         </CardContent>
       </Card>
 
-      <div className={pluginLayout === "grid" ? "grid gap-3 md:grid-cols-2 xl:grid-cols-3" : "flex flex-col gap-3"}>
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {pluginApis.map((rawApi) => {
           const api = localizeApi(rawApi, locale);
           return (
