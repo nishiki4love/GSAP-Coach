@@ -71,10 +71,10 @@ export function CoachHeader({ activePage, coverageTotals }: CoachHeaderProps) {
         variant="outline"
         size="sm"
         className="md:hidden"
-        render={<NavLink to="/coverage" />}
+        render={<NavLink to="/tutorials" />}
         nativeButton={false}
       >
-        {t("app.header.coverage")}
+        {t("app.header.tutorials")}
       </Button>
       <AppControls />
     </header>

@@ -82,19 +82,6 @@ input {
   box-shadow: inset 0 0 120px hsl(var(--stage-hue) 72% 72% / var(--stage-glow));
 }
 
-.cursor-follower {
-  position: absolute;
-  z-index: 20;
-  width: 18px;
-  height: 18px;
-  border: 2px solid #151815;
-  border-radius: 999px;
-  background: #a8ff04;
-  pointer-events: none;
-  transform: translate3d(20px, 20px, 0);
-  will-change: transform;
-}
-
 .stage-animated,
 .plugin-tile,
 .coverage-row,
@@ -116,10 +103,6 @@ pre code {
 }
 
 @media (max-width: 767px) {
-  .cursor-follower {
-    display: none;
-  }
-
   .stage-canvas {
     min-height: 360px;
   }
