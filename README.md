@@ -1,8 +1,16 @@
 # GSAP Coach
 
+[在线访问 GitHub Pages](https://nishiki4love.github.io/GSAP-Coach/)
+
 GSAP Coach 是一个面向前端开发者的 GSAP 交互式教学网站。它把“学习路径、章节课堂、动画工作台、API 覆盖矩阵和专题实验室”组织在一起，帮助用户从基础 Tween 心智模型逐步学到 Timeline、ScrollTrigger、插件、框架清理和性能优化。
 
-项目当前更像一个可运行的课程产品，而不是单纯的 API 示例集：用户可以按章节学习、完成自测、收藏 API 和代码片段，也可以通过覆盖矩阵快速查找某个 GSAP API 的演示或教程位置。
+它不是单纯的 API 示例集，而是一个可运行的课程产品：用户可以按章节学习、完成自测、收藏 API 和代码片段，也可以通过覆盖矩阵快速查找某个 GSAP API 的演示、教程位置和运行参数。
+
+## 访问入口
+
+- 线上站点：[https://nishiki4love.github.io/GSAP-Coach/](https://nishiki4love.github.io/GSAP-Coach/)
+- GitHub 仓库：[https://github.com/nishiki4love/GSAP-Coach](https://github.com/nishiki4love/GSAP-Coach)
+- 本地开发：运行 `bun run dev` 后访问 Vite 输出的本地地址。
 
 ## 核心能力
 
@@ -89,6 +97,12 @@ bun run preview
 ```
 
 ## 部署说明
+
+当前生产站点托管在 GitHub Pages：
+
+- Pages 地址：[https://nishiki4love.github.io/GSAP-Coach/](https://nishiki4love.github.io/GSAP-Coach/)
+- 发布来源：GitHub Actions workflow
+- 生产构建命令：`bun run build:pages`
 
 普通构建使用根路径 `/`：
 
