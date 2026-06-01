@@ -1,4 +1,5 @@
 import type { DemoTab, SkillGroupId } from "@/data/gsapApiCatalog";
+import type { DemoParameterControl, DemoParameterValue, DemoParameterValues } from "./workbench/demoParameterControls";
 
 export type CoachPageId = "demo" | "tutorials" | "coverage" | "scroll-labs" | "plugins" | "performance";
 
@@ -34,11 +35,14 @@ export interface DemoControls {
   progress: number;
   observerHint: string;
   stageStatus: string;
+  parameterControls: DemoParameterControl[];
+  parameterValues: DemoParameterValues;
   setActiveDemo: (demo: DemoTab["id"]) => void;
-  runDemo: (demo?: DemoTab["id"]) => void;
+  runDemo: (demo?: DemoTab["id"], apiId?: string) => void;
   resetStage: () => void;
   controlAnimation: (action: AnimationAction) => void;
   seekAnimation: (value: number) => void;
+  updateParameterValue: (apiId: string, parameterId: string, value: DemoParameterValue) => void;
 }
 
 export interface ApiSelectionControls {

@@ -1,5 +1,8 @@
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { useI18n } from "@/lib/i18n";
-import { Navigate, useParams } from "react-router";
+import { ArrowLeft } from "lucide-react";
+import { Navigate, NavLink, useParams } from "react-router";
 import type { ScrollExampleId } from "./types";
 import { CleanupScrollExample } from "./scroll-labs/CleanupScrollExample";
 import { HorizontalScrollExample } from "./scroll-labs/HorizontalScrollExample";
@@ -32,6 +35,19 @@ export function ScrollLabsPage({ onStageStatusChange }: ScrollLabsPageProps) {
           {t("scroll.description")}
         </p>
       </div>
+
+      <Card>
+        <CardContent className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="text-sm font-medium">{t("scroll.courseContextTitle")}</div>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">{t("scroll.courseContextDescription")}</p>
+          </div>
+          <Button variant="outline" render={<NavLink to="/tutorials/scroll-flow" />} nativeButton={false}>
+            <ArrowLeft data-icon="inline-start" />
+            {t("scroll.backToCourse")}
+          </Button>
+        </CardContent>
+      </Card>
 
       <ScrollLabNav activeExample={activeExample} />
 
